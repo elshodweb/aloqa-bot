@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BotService } from 'src/modules/bot/bot.service';
 import { CreateLeadDto } from 'src/types/lead/lead.dto';
-import { messageFormatter } from 'src/common/helpers/message-formatter';
+import { leadFormatter } from 'src/common/helpers/lead-formatter';
 
 @Injectable()
 export class LeadService {
@@ -12,7 +12,7 @@ export class LeadService {
     this.logger.log(`Creating lead: ${JSON.stringify(createLeadDto)}`);
     try {
       await this.botService.sendToTarget(
-        messageFormatter(createLeadDto.full_name, createLeadDto.phone),
+        leadFormatter(createLeadDto.full_name, createLeadDto.phone),
       );
     } catch (error) {
       this.logger.error(`Failed to create lead: ${error}`);

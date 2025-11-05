@@ -2,11 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BotService } from './modules/bot/bot.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  console.log('🌐 Running with HTTP (WS enabled)');
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('CRM Api Docs')
@@ -14,17 +14,22 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const platformDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, platformDocument);
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document);
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableCors();
+
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
 
   const botService = app.get(BotService);
   botService.initBot();
   botService.launch();
 
-  console.log('✅ NestJS application and Telegram bot started!');
+  console.log(`✅ Server started on port ${port}`);
 }
+
 bootstrap();

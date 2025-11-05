@@ -1,7 +1,3 @@
-export const messageFormatter = (fullName: string, phone: string) => {
-    return `
-🆕 New Lead!
-👤 Name: ${fullName}
-📞 Phone: ${phone}
-`;
+export const messageFormatter = (id: string, message: string) => {
+  return `👤 ID:${id}\n📩 Message:\n${message}`;
 };

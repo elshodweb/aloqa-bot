@@ -1,6 +1,14 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
+import { ChatGateway } from '../chat/chat.gateway';
+import { extractId } from 'src/common/helpers/extracter-id';
 
 @Injectable()
 export class BotService implements OnModuleDestroy {
@@ -8,7 +16,11 @@ export class BotService implements OnModuleDestroy {
   private bot?: Telegraf;
   private targetChatId?: string;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   async initBot() {
     const token =
@@ -36,6 +48,35 @@ export class BotService implements OnModuleDestroy {
       }
       await ctx.reply('❌ You are not authorized to use this bot.');
     });
+
+    this.bot.on('text', async (ctx) => {
+      const messageText = ctx.message.text;
+
+      const repliedMessage = ctx.message.reply_to_message;
+
+      if (!repliedMessage || !('text' in repliedMessage)) {
+        this.logger.log('No replied text message found');
+        await ctx.reply("Muroja'tga javob berish uchun habarni belgilashni unutmang!!!");
+
+        return;
+      }
+
+      const originalText = repliedMessage.text;
+
+      this.logger.log(`Original message (replied to): ${originalText}`);
+
+      const id = extractId(originalText);
+      if (!id) {
+        this.logger.log(`ID was not found from original message`);
+        return;
+      }
+
+      const from = ctx.from.username || ctx.from.first_name;
+
+      this.chatGateway.sendMessageToClient(id, messageText);
+
+      this.logger.log(`Message from ${from}: ${messageText}`);
+    });
   }
 
   async launch() {
@@ -43,7 +84,6 @@ export class BotService implements OnModuleDestroy {
     await this.bot.launch();
     this.logger.log('🚀 Telegram bot started (long polling)');
   }
-
 
   async onModuleDestroy() {
     if (this.bot) {
