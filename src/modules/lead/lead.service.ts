@@ -12,7 +12,8 @@ export class LeadService {
     this.logger.log(`Creating lead: ${JSON.stringify(createLeadDto)}`);
     try {
       await this.botService.sendToTarget(
-        leadFormatter(createLeadDto.full_name, createLeadDto.phone),
+        leadFormatter(createLeadDto.full_name, createLeadDto.phone,
+          createLeadDto.type, createLeadDto.title, createLeadDto.question),
       );
     } catch (error) {
       this.logger.error(`Failed to create lead: ${error}`);
