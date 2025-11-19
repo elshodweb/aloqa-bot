@@ -11,6 +11,9 @@ export class LeadService {
   async createLead(createLeadDto: CreateLeadDto) {
     this.logger.log(`Creating lead: ${JSON.stringify(createLeadDto)}`);
     try {
+      if(createLeadDto.question && createLeadDto.title && createLeadDto.type){
+        throw new Error('You can ask question only without title and type' );
+      }
       await this.botService.sendToTarget(
         leadFormatter(createLeadDto.full_name, createLeadDto.phone,
           createLeadDto.type, createLeadDto.title, createLeadDto.question),
